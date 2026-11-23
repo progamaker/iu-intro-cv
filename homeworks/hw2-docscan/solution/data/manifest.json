@@ -1,0 +1,164 @@
+[
+  {
+    "file": "01.jpg",
+    "requested_category": "Тёмный фон, прямо",
+    "source_attachment": 1,
+    "duplicate_of": null,
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "0847dd9ba2e95aeb098f352a22893fa38ce4c54e73033a931d2744f7c87d5e01"
+  },
+  {
+    "file": "02.jpg",
+    "requested_category": "Тёмный фон, наклон",
+    "source_attachment": 2,
+    "duplicate_of": null,
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "d9b38f85ff18c89cee5c11f324e13e752f7a38426bf48bdba2a6facf78f761e5"
+  },
+  {
+    "file": "03.jpg",
+    "requested_category": "Тёмный фон, сильный наклон",
+    "source_attachment": 3,
+    "duplicate_of": null,
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "516c7e95980875217b500026c330b202f79a3af042da6d9980f153a6368d12c5"
+  },
+  {
+    "file": "04.jpg",
+    "requested_category": "Полумрак, поворот",
+    "source_attachment": 8,
+    "duplicate_of": null,
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "2e79c69ec3d67a52b532adb9b85581ad0c76409ac487b4ed1896b0e3ba97e507"
+  },
+  {
+    "file": "05.jpg",
+    "requested_category": "Закрытый угол",
+    "source_attachment": 7,
+    "duplicate_of": null,
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "2ace23c76fe9b1ab1c35730910a70413be0f9325ef572d214ce67b55825839bf"
+  },
+  {
+    "file": "06.jpg",
+    "requested_category": "Светлый стол, прямо",
+    "source_attachment": 4,
+    "duplicate_of": null,
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "9693275618f66db5a900b1ea31ac02b0dddf9ae9412fad21f9a06a53f8a5b958"
+  },
+  {
+    "file": "07.jpg",
+    "requested_category": "Светлый стол, боковой свет",
+    "source_attachment": 5,
+    "duplicate_of": null,
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "82a0781a915a1a874a9ec2562c97163d394ee2748460ad0ee91850c62b2082e8"
+  },
+  {
+    "file": "08.jpg",
+    "requested_category": "Светлый стол, наклон",
+    "source_attachment": 6,
+    "duplicate_of": null,
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "9d47c78cf0d2a1a45c1b744fafe5ba2210a323fd3f78cd7943ddd5740a1e03ac"
+  },
+  {
+    "file": "09.jpg",
+    "requested_category": "Светлый фон, поворот",
+    "source_attachment": 9,
+    "duplicate_of": null,
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "848775e465db5a6ea27b29fb17640d7693bb807335ba1062cfdcd493f4c0e1d6"
+  },
+  {
+    "file": "10.jpg",
+    "requested_category": "Ручка через границу листа",
+    "source_attachment": 10,
+    "duplicate_of": null,
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "f6d3bff49250c2d444b0f97dbd5176f1c13a342a9de25336734c8968e78c385f"
+  },
+  {
+    "file": "11.jpg",
+    "requested_category": "Пёстрый фон, прямо",
+    "source_attachment": 7,
+    "duplicate_of": "05.jpg",
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "2ace23c76fe9b1ab1c35730910a70413be0f9325ef572d214ce67b55825839bf"
+  },
+  {
+    "file": "12.jpg",
+    "requested_category": "Пёстрый фон, боковой свет",
+    "source_attachment": 1,
+    "duplicate_of": "01.jpg",
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "0847dd9ba2e95aeb098f352a22893fa38ce4c54e73033a931d2744f7c87d5e01"
+  },
+  {
+    "file": "13.jpg",
+    "requested_category": "Пёстрый фон, полумрак",
+    "source_attachment": 8,
+    "duplicate_of": "04.jpg",
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "2e79c69ec3d67a52b532adb9b85581ad0c76409ac487b4ed1896b0e3ba97e507"
+  },
+  {
+    "file": "14.jpg",
+    "requested_category": "Пёстрый фон, поворот",
+    "source_attachment": 2,
+    "duplicate_of": "02.jpg",
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "d9b38f85ff18c89cee5c11f324e13e752f7a38426bf48bdba2a6facf78f761e5"
+  },
+  {
+    "file": "15.jpg",
+    "requested_category": "Загнутый угол",
+    "source_attachment": 3,
+    "duplicate_of": "03.jpg",
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "516c7e95980875217b500026c330b202f79a3af042da6d9980f153a6368d12c5"
+  },
+  {
+    "file": "16.jpg",
+    "requested_category": "Ноутбук вместо листа",
+    "source_attachment": 4,
+    "duplicate_of": "06.jpg",
+    "placeholder": false,
+    "actual_sheet_visible": false,
+    "sha256": "9693275618f66db5a900b1ea31ac02b0dddf9ae9412fad21f9a06a53f8a5b958"
+  },
+  {
+    "file": "17.jpg",
+    "requested_category": "Лист двумя углами вне кадра",
+    "source_attachment": 6,
+    "duplicate_of": "08.jpg",
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "9d47c78cf0d2a1a45c1b744fafe5ba2210a323fd3f78cd7943ddd5740a1e03ac"
+  },
+  {
+    "file": "18.jpg",
+    "requested_category": "Белый лист на белом фоне",
+    "source_attachment": 10,
+    "duplicate_of": "10.jpg",
+    "placeholder": true,
+    "actual_sheet_visible": false,
+    "sha256": "f6d3bff49250c2d444b0f97dbd5176f1c13a342a9de25336734c8968e78c385f"
+  }
+]

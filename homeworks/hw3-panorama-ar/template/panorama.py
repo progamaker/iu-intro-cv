@@ -27,14 +27,45 @@ def write_image(path, image):
 
 def normalize_points(points):
     """Нормализация Хартли: центроид 0, среднее расстояние sqrt(2)."""
-    # центроид, масштаб, матрица T, преобразованные точки
-    raise NotImplementedError("TODO 1")
+    pts = np.asarray(points, np.float64).reshape(-1, 2)
+    center = pts.mean(axis=0)
+    centered = pts - center
+    mean_dist = np.linalg.norm(centered, axis=1).mean()
+    if not np.isfinite(mean_dist) or mean_dist < 1e-12:
+        raise ValueError('Точки вырождены: нулевой разброс')
+    scale = np.sqrt(2.0) / mean_dist
+    transform = np.array([
+        [scale, 0.0, -scale * center[0]],
+        [0.0, scale, -scale * center[1]],
+        [0.0, 0.0, 1.0],
+    ], np.float64)
+    homogeneous = np.column_stack([pts, np.ones(len(pts))])
+    normalized = (transform @ homogeneous.T).T
+    return normalized[:, :2], transform
 
 
 def dlt(src, dst):
     """Нормализованный DLT; H отображает src в dst, H[2,2]=1."""
-    # A, SVD, денормализация; проверить ранг
-    raise NotImplementedError("TODO 2")
+    src = np.asarray(src, np.float64).reshape(-1, 2)
+    dst = np.asarray(dst, np.float64).reshape(-1, 2)
+    if len(src) < 4 or len(src) != len(dst):
+        raise ValueError('Для DLT нужно не меньше четырёх пар')
+    src_n, t_src = normalize_points(src)
+    dst_n, t_dst = normalize_points(dst)
+    rows = []
+    for (x, y), (u, v) in zip(src_n, dst_n):
+        rows.append([0.0, 0.0, 0.0, -x, -y, -1.0, v * x, v * y, v])
+        rows.append([x, y, 1.0, 0.0, 0.0, 0.0, -u * x, -u * y, -u])
+    design = np.asarray(rows, np.float64)
+    _, singular, vt = np.linalg.svd(design)
+    # У коллинеарных и прочих вырожденных наборов нуль-пространство толще одной оси.
+    if singular[-2] <= 1e-8 * singular[0]:
+        raise ValueError('Вырожденная конфигурация точек')
+    homography_n = vt[-1].reshape(3, 3)
+    homography = np.linalg.inv(t_dst) @ homography_n @ t_src
+    if abs(homography[2, 2]) < 1e-12:
+        raise ValueError('Вырожденная гомография')
+    return homography / homography[2, 2]
 
 
 def project(points, H):
@@ -48,14 +79,64 @@ def project(points, H):
 
 def ransac_homography(src, dst, threshold=3.0, iterations=500, seed=0):
     """Свой цикл RANSAC, свой DLT, маска инлаеров в исходном порядке."""
-    # выборка 4, ошибка репроекции, лучшая маска, уточнение
-    raise NotImplementedError("TODO 3")
+    src = np.asarray(src, np.float64).reshape(-1, 2)
+    dst = np.asarray(dst, np.float64).reshape(-1, 2)
+    if len(src) < 4 or len(src) != len(dst):
+        raise ValueError('Для RANSAC нужно не меньше четырёх пар')
+    rng = np.random.default_rng(seed)
+    best_mask, best_count = None, 3
+    for _ in range(iterations):
+        sample = rng.choice(len(src), 4, replace=False)
+        try:
+            candidate = dlt(src[sample], dst[sample])
+        except (ValueError, np.linalg.LinAlgError):
+            continue
+        error = np.linalg.norm(project(src, candidate) - dst, axis=1)
+        mask = np.isfinite(error) & (error < threshold)
+        count = int(mask.sum())
+        if count > best_count:
+            best_mask, best_count = mask, count
+    if best_mask is None:
+        raise ValueError('RANSAC не нашёл гомографию')
+    homography = dlt(src[best_mask], dst[best_mask])
+    error = np.linalg.norm(project(src, homography) - dst, axis=1)
+    mask = np.isfinite(error) & (error < threshold)
+    if int(mask.sum()) >= 4 and int(mask.sum()) != int(best_mask.sum()):
+        homography = dlt(src[mask], dst[mask])
+    return homography, mask
 
 
 def match_points(image1, image2, detector='sift', ratio=0.75):
     """SIFT/ORB и ratio test; вернуть две согласованные Nx2 матрицы."""
-    # детектор, подходящая норма, knnMatch и ratio test
-    raise NotImplementedError("TODO 4")
+    def gray(image):
+        if image.ndim == 2:
+            return image
+        return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    if detector == 'sift':
+        extractor = cv2.SIFT_create()
+        norm = cv2.NORM_L2
+    elif detector == 'orb':
+        extractor = cv2.ORB_create(nfeatures=4000)
+        norm = cv2.NORM_HAMMING
+    else:
+        raise ValueError('Детектор должен быть sift или orb')
+    keys1, desc1 = extractor.detectAndCompute(gray(image1), None)
+    keys2, desc2 = extractor.detectAndCompute(gray(image2), None)
+    if desc1 is None or desc2 is None or len(keys1) < 2 or len(keys2) < 2:
+        raise ValueError('Недостаточно признаков')
+    pairs = cv2.BFMatcher(norm).knnMatch(desc1, desc2, k=2)
+    src, dst_pts = [], []
+    for pair in pairs:
+        if len(pair) != 2:
+            continue
+        best, second = pair
+        if best.distance < ratio * second.distance:
+            src.append(keys1[best.queryIdx].pt)
+            dst_pts.append(keys2[best.trainIdx].pt)
+    if len(src) < 4:
+        raise ValueError('Недостаточно соответствий после ratio test')
+    return np.float64(src), np.float64(dst_pts)
 
 
 def image_corners(image):
@@ -65,20 +146,55 @@ def image_corners(image):
 
 def feather_blend(images, transforms):
     """H_i: кадр i → система первого кадра; чёрный цвет не означает пустоту."""
-    # общий холст, сдвиг, маски покрытия и взвешенная сумма
-    raise NotImplementedError("TODO 5")
+    transforms = [np.asarray(matrix, np.float64) for matrix in transforms]
+    corners = np.vstack([project(image_corners(image), matrix) for image, matrix in zip(images, transforms)])
+    if not np.isfinite(corners).all():
+        raise ValueError('Преобразование уводит углы кадра в бесконечность')
+    min_xy = np.floor(corners.min(axis=0) + 1e-9)
+    max_xy = np.ceil(corners.max(axis=0) - 1e-9)
+    width = int(max_xy[0] - min_xy[0] + 1)
+    height = int(max_xy[1] - min_xy[1] + 1)
+    shift = np.array([[1.0, 0.0, -min_xy[0]], [0.0, 1.0, -min_xy[1]], [0.0, 0.0, 1.0]], np.float64)
+    accumulator = np.zeros((height, width, 3), np.float64)
+    weight_sum = np.zeros((height, width), np.float64)
+    for image, matrix in zip(images, transforms):
+        mapping = shift @ matrix
+        warped = cv2.warpPerspective(image, mapping, (width, height), flags=cv2.INTER_LINEAR)
+        coverage = cv2.warpPerspective(np.full(image.shape[:2], 255, np.uint8), mapping, (width, height),
+                                       flags=cv2.INTER_NEAREST)
+        inside = coverage > 0
+        if not inside.any():
+            continue
+        # Вес — расстояние до границы покрытия, а не яркость: чёрный кадр тоже занимает холст.
+        weight = cv2.distanceTransform(inside.astype(np.uint8), cv2.DIST_L2, 3)
+        weight = np.where(inside, np.maximum(weight, 1e-6), 0.0)
+        accumulator += warped.astype(np.float64) * weight[..., None]
+        weight_sum += weight
+    panorama = np.zeros_like(accumulator)
+    covered = weight_sum > 0
+    panorama[covered] = accumulator[covered] / weight_sum[covered, None]
+    return np.clip(np.rint(panorama), 0, 255).astype(np.uint8), shift
 
 
 def smooth_homography(previous, current, corners, alpha=0.4):
     """EMA проекций углов: alpha=1 означает текущий кадр без сглаживания."""
-    # сгладить углы, затем восстановить H своим DLT
-    raise NotImplementedError("TODO 6")
+    current = np.asarray(current, np.float64)
+    corners = np.asarray(corners, np.float64).reshape(-1, 2)
+    if previous is None or alpha >= 1.0:
+        return current / current[2, 2]
+    blended = alpha * project(corners, current) + (1.0 - alpha) * project(corners, previous)
+    return dlt(corners, blended)
 
 
 def overlay(frame, texture, H, opacity=0.8):
     """H переводит углы texture в координаты кадра."""
-    # варп текстуры и отдельной маски, альфа-композитинг
-    raise NotImplementedError("TODO 7")
+    height, width = frame.shape[:2]
+    warped = cv2.warpPerspective(texture, H, (width, height), flags=cv2.INTER_NEAREST)
+    coverage = cv2.warpPerspective(np.full(texture.shape[:2], 255, np.uint8), H, (width, height),
+                                   flags=cv2.INTER_NEAREST)
+    alpha = (coverage > 0).astype(np.float32) * np.float32(opacity)
+    composed = frame.astype(np.float32) * (1.0 - alpha[..., None]) + warped.astype(np.float32) * alpha[..., None]
+    return np.clip(np.rint(composed), 0, 255).astype(np.uint8)
 
 
 def stitch(images, detector='sift', ratio=0.75, seed=0):

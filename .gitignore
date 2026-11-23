@@ -11,10 +11,12 @@ __pycache__/
 !**/data/README.md
 # исключение: кадры эталонного решения ДЗ 1 — без них REPORT.md не перепроверить
 !homeworks/hw1-photolab/solution/data/**
+!homeworks/hw2-docscan/solution/data/**
 *.pptx
 out/
 # исключение: out/ ДЗ 1 сдаётся вместе с решением (README ДЗ, §1)
 !homeworks/hw1-photolab/solution/out/
+!homeworks/hw2-docscan/solution/out/
 # результаты эталонного прогона: 12 МБ, пересоздаются `solution/run_all.sh --course`
 out-course/
 

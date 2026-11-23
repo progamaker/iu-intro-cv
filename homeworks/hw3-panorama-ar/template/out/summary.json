@@ -1,0 +1,151 @@
+{
+  "seed": 4,
+  "python": "3.11.16",
+  "opencv": "4.14.0",
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "processor": "arm",
+  "planar": {
+    "paths": [
+      "data/planar/frame0.png",
+      "data/planar/frame1.png",
+      "data/planar/frame2.png",
+      "data/planar/frame3.png"
+    ],
+    "shape": [
+      607,
+      1790,
+      3
+    ],
+    "angles_deg": [
+      -6.0,
+      -2.0,
+      3.0,
+      7.0
+    ],
+    "reports": [
+      {
+        "pair": [
+          1,
+          0
+        ],
+        "matches": 113,
+        "inlier_ratio": 0.20353982300884957,
+        "reprojection_px": 0.5987855740358452
+      },
+      {
+        "pair": [
+          2,
+          1
+        ],
+        "matches": 263,
+        "inlier_ratio": 0.7224334600760456,
+        "reprojection_px": 0.16205748371463466
+      },
+      {
+        "pair": [
+          3,
+          2
+        ],
+        "matches": 207,
+        "inlier_ratio": 0.782608695652174,
+        "reprojection_px": 0.16155241161425893
+      }
+    ],
+    "stitcher_status": {
+      "panorama": 0
+    },
+    "stitcher_shape": [
+      427,
+      1425,
+      3
+    ]
+  },
+  "parallax": {
+    "paths": [
+      "data/parallax/frame0.png",
+      "data/parallax/frame1.png",
+      "data/parallax/frame2.png",
+      "data/parallax/frame3.png"
+    ],
+    "reports": [
+      {
+        "pair": [
+          1,
+          0
+        ],
+        "matches": 1139,
+        "inlier_ratio": 0.5162423178226514,
+        "reprojection_px": 0.016034657224741497
+      },
+      {
+        "pair": [
+          2,
+          1
+        ],
+        "matches": 1062,
+        "inlier_ratio": 0.5094161958568738,
+        "reprojection_px": 0.019797114790750192
+      },
+      {
+        "pair": [
+          3,
+          2
+        ],
+        "matches": 1068,
+        "inlier_ratio": 0.5,
+        "reprojection_px": 0.010870134826583146
+      }
+    ],
+    "error": null,
+    "stitcher_status": {
+      "panorama": 0
+    },
+    "stitcher_shape": [
+      499,
+      628,
+      3
+    ]
+  },
+  "dlt": [
+    {
+      "case": "case1",
+      "frobenius": 3.4040068222434794e-14
+    },
+    {
+      "case": "case2",
+      "frobenius": 3.4040068222434794e-14
+    },
+    {
+      "case": "case3",
+      "frobenius": 3.4040068222434794e-14
+    }
+  ],
+  "ar": {
+    "alpha_1.0": {
+      "found": 12,
+      "frames": 12,
+      "rms_px": 1.8065753603723638,
+      "samples": 44,
+      "pipeline": {
+        "frames": 24,
+        "tracked": 20,
+        "fps": 45.274522804485485
+      }
+    },
+    "alpha_0.4": {
+      "found": 12,
+      "frames": 12,
+      "rms_px": 0.5932513835730295,
+      "samples": 44,
+      "pipeline": {
+        "frames": 24,
+        "tracked": 20,
+        "fps": 44.75177101625317
+      }
+    }
+  },
+  "detector": "sift",
+  "ratio": 0.75,
+  "ransac_threshold_px": 3.0,
+  "ransac_iterations": 500
+}

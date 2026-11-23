@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""ДЗ: шаблон. Заполните TODO; команды и контракт — в README.md."""
+"""HW4: калибровка, измерение на плоскости доски и стереоглубина."""
 import argparse
 import json
 from pathlib import Path
@@ -17,50 +17,131 @@ def read_image(path):
 
 def board_points(columns, rows, square_m):
     """Внутренние углы шахматки: row-major, все расстояния в метрах."""
-    # сетка XY, масштаб, Z=0
-    raise NotImplementedError("TODO 1")
+    points = np.zeros((rows * columns, 3), np.float64)
+    index = 0
+    for row in range(rows):
+        for column in range(columns):
+            points[index] = (column * square_m, row * square_m, 0.0)
+            index += 1
+    return points
 
 
 def reprojection_errors(objects, images, K, distortion, rvecs, tvecs):
     """Для каждой позы sqrt(mean(||проекция-наблюдение||²)), в пикселях."""
-    # projectPoints и RMS по двумерным евклидовым ошибкам
-    raise NotImplementedError("TODO 2")
+    camera = np.asarray(K, np.float64)
+    dist = None if distortion is None else np.asarray(distortion, np.float64).reshape(-1, 1)
+    errors = []
+    for obj, observed, rvec, tvec in zip(objects, images, rvecs, tvecs):
+        projected, _ = cv2.projectPoints(np.asarray(obj, np.float64).reshape(-1, 3),
+                                         np.asarray(rvec, np.float64).reshape(3, 1),
+                                         np.asarray(tvec, np.float64).reshape(3, 1),
+                                         camera, dist)
+        delta = projected.reshape(-1, 2) - np.asarray(observed, np.float64).reshape(-1, 2)
+        errors.append(np.sqrt(np.mean(np.sum(delta * delta, axis=1))))
+    return np.asarray(errors, np.float64)
 
 
 def calibrate(objects, images, image_size):
     """Вернуть RMS, K, dist, rvecs, tvecs, per_image; image_size=(W,H)."""
-    # проверить набор, calibrateCamera, ошибки по позам
-    raise NotImplementedError("TODO 3")
+    if len(objects) < 3 or len(objects) != len(images):
+        raise ValueError('Для калибровки нужно не меньше трёх поз')
+    object_points = [np.asarray(item, np.float32).reshape(-1, 3) for item in objects]
+    image_points = [np.asarray(item, np.float32).reshape(-1, 1, 2) for item in images]
+    size = (int(image_size[0]), int(image_size[1]))
+    rms, camera, distortion, rvecs, tvecs = cv2.calibrateCamera(object_points, image_points, size, None, None)
+    errors = reprojection_errors(object_points, image_points, camera, distortion, rvecs, tvecs)
+    return float(rms), camera, distortion, rvecs, tvecs, errors
 
 
 def plane_measure(pixels, K, distortion, rvec, tvec):
     """Луч из пикселя пересечь с Z=0 доски; вернуть точки в СК доски (метры)."""
-    # undistortPoints, R.T, центр камеры, пересечение лучей с плоскостью
-    raise NotImplementedError("TODO 4")
+    pixels = np.asarray(pixels, np.float64).reshape(-1, 1, 2)
+    camera = np.asarray(K, np.float64)
+    dist = np.asarray(distortion, np.float64).reshape(-1, 1)
+    rotation, _ = cv2.Rodrigues(np.asarray(rvec, np.float64).reshape(3, 1))
+    translation = np.asarray(tvec, np.float64).reshape(3)
+    normalized = cv2.undistortPoints(pixels, camera, dist).reshape(-1, 2)
+    camera_center = -rotation.T @ translation
+    directions = rotation.T @ np.column_stack([normalized, np.ones(len(normalized))]).T
+    points = []
+    for direction in directions.T:
+        if abs(direction[2]) < 1e-12:
+            raise ValueError('Луч параллелен плоскости доски')
+        scale = -camera_center[2] / direction[2]
+        if scale <= 0:
+            raise ValueError('Пересечение луча с плоскостью позади камеры')
+        points.append(camera_center + scale * direction)
+    return np.asarray(points, np.float64)
 
 
 def disparity_metrics(prediction, truth, valid):
     """bad-2.0 в %, RMSE в px; маска GT обязательна, невалидный prediction — ошибка."""
-    # маска GT, покрытие, bad2 с учётом пропусков, RMSE
-    raise NotImplementedError("TODO 5")
+    predicted = np.asarray(prediction, np.float64)
+    reference = np.asarray(truth, np.float64)
+    mask = np.asarray(valid, bool)
+    if predicted.shape != reference.shape or mask.shape != reference.shape:
+        raise ValueError('prediction, truth и valid должны совпадать по форме')
+    if int(mask.sum()) == 0:
+        raise ValueError('Маска GT пуста')
+    predicted = predicted[mask]
+    reference = reference[mask]
+    usable = np.isfinite(predicted) & (predicted > 0)
+    coverage = 100.0 * float(usable.mean())
+    error = np.abs(predicted - reference)
+    bad = (~usable) | (usable & (error > 2.0))
+    rmse = None
+    if bool(usable.all()):
+        rmse = float(np.sqrt(np.mean((predicted - reference) ** 2)))
+    return dict(valid_pixels=int(mask.sum()), bad2_pct=float(100.0 * bad.mean()),
+                rmse_px=rmse, coverage_pct=coverage)
 
 
 def stereo_depth(disparity, focal_px, baseline_m, doffs=0.0):
     """Z=fB/(d+doffs); неизвестная/неположительная диспаратность → NaN."""
-    # валидация единиц, маска, глубина без деления на ноль
-    raise NotImplementedError("TODO 6")
+    disparity = np.asarray(disparity, np.float64)
+    if focal_px <= 0 or baseline_m <= 0:
+        raise ValueError('Фокус и база должны быть положительными')
+    depth = np.full(disparity.shape, np.nan, np.float64)
+    denominator = disparity + doffs
+    usable = np.isfinite(disparity) & (disparity > 0) & (denominator > 1e-12)
+    depth[usable] = (float(focal_px) * float(baseline_m)) / denominator[usable]
+    return depth
 
 
 def sgbm(left, right, num_disparities=32, block_size=5):
     """Вход — ректифицированная пара. OpenCV fixed point /16 → пиксели."""
-    # параметры SGBM, compute, float /16, маска пропусков
-    raise NotImplementedError("TODO 7")
+    if int(num_disparities) % 16 != 0 or int(num_disparities) <= 0:
+        raise ValueError('numDisparities должен быть положительным и кратным 16')
+    if int(block_size) < 3 or int(block_size) % 2 == 0:
+        raise ValueError('blockSize должен быть нечётным и не меньше 3')
+    channels = 1 if left.ndim == 2 else left.shape[2]
+    matcher = cv2.StereoSGBM_create(
+        minDisparity=0,
+        numDisparities=int(num_disparities),
+        blockSize=int(block_size),
+        P1=8 * channels * int(block_size) ** 2,
+        P2=32 * channels * int(block_size) ** 2,
+        disp12MaxDiff=1,
+        uniquenessRatio=5,
+        speckleWindowSize=50,
+        speckleRange=1,
+        preFilterCap=31,
+        mode=cv2.STEREO_SGBM_MODE_SGBM_3WAY,
+    )
+    disparity = matcher.compute(left, right).astype(np.float32) / 16.0
+    disparity[disparity <= 0] = np.nan
+    return disparity
 
 
 def point_cloud(depth, K):
     """Плотное XYZ в системе левой камеры; пиксели отсчитываются от (0,0)."""
-    # сетка uv, Z, X=(u-cx)Z/fx, Y=(v-cy)Z/fy
-    raise NotImplementedError("TODO 8")
+    depth = np.asarray(depth, np.float64)
+    camera = np.asarray(K, np.float64)
+    rows, cols = np.indices(depth.shape)
+    z = depth
+    x = (cols - camera[0, 2]) * z / camera[0, 0]
+    y = (rows - camera[1, 2]) * z / camera[1, 1]
+    return np.dstack([x, y, z])
 
 
 def write_ply(path, xyz, colors):

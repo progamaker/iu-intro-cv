@@ -1,0 +1,11 @@
+file,sheet,contour_found,contour_iou,contour_ms,hough_found,hough_iou,hough_ms,auto_found,auto_iou,auto_ms,auto_path,hough_ok_of_20
+01.jpg,False,False,,20.1,False,,48.4,False,,17.2,,20
+02.jpg,False,False,,2.8,False,,18.2,False,,17.7,,20
+03.jpg,False,False,,3.1,False,,16.7,False,,16.5,,20
+04.jpg,False,False,,2.6,False,,17.0,False,,17.3,,20
+05.jpg,False,False,,2.6,False,,17.5,False,,17.9,,20
+06.jpg,False,False,,2.6,False,,17.7,False,,18.1,,20
+07.jpg,False,False,,3.2,False,,18.5,False,,18.8,,20
+08.jpg,False,False,,2.7,False,,2.5,False,,2.5,,20
+09.jpg,False,False,,2.7,False,,2.7,False,,2.7,,20
+10.jpg,False,False,,3.1,False,,3.1,False,,3.5,,20
